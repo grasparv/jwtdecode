@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 func decodeSegment(seg string) (map[string]any, error) {
@@ -19,6 +20,28 @@ func decodeSegment(seg string) (map[string]any, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+func printHumanTimestamps(payload map[string]any) {
+	tsFields := []string{"exp", "iat", "nbf", "auth_time"}
+
+	fmt.Println("\nHuman-Readable Timestamps:")
+	found := false
+
+	for _, field := range tsFields {
+		if v, ok := payload[field]; ok {
+			switch num := v.(type) {
+			case float64: // JSON numbers become float64
+				t := time.Unix(int64(num), 0)
+				fmt.Printf("  %s: %s\n", field, t.Format(time.RFC3339))
+				found = true
+			}
+		}
+	}
+
+	if !found {
+		fmt.Println("  (none found)")
+	}
 }
 
 func main() {
@@ -52,4 +75,6 @@ func main() {
 	fmt.Println("\nPayload:")
 	p, _ := json.MarshalIndent(payload, "", "  ")
 	fmt.Println(string(p))
+
+	printHumanTimestamps(payload)
 }
